@@ -7,6 +7,7 @@
 #include "zork_config.h"
 #include "CLS1.h"
 #include "UTIL1.h"
+#include "Zork.h"
 #if USE_FATFS
   #include "FAT1.h"
 #endif
@@ -197,5 +198,5 @@ void zork_config(void) {
 
 void _exit(int i) { /* own exit routine */
   CLS1_SendStr("exit Zork program\r\n", CLS1_GetStdio()->stdErr);
-  for(;;) {}
+  zork_exit();
 }

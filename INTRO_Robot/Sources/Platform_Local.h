@@ -74,4 +74,6 @@
 #define PL_LOCAL_CONFIG_HAS_LINE_MAZE_DISABLED            /* disable maze solving */
 #define PL_LOCAL_CONFIG_HAS_BATTERY_ADC_DISABLED          /* disable battery ADC */
 
+//#define PL_LOCAL_CONFIG_HAS_ZORK_GAME_DISABLED 			  /* disable ZORK */
+
 #endif /* SOURCES_PLATFORM_LOCAL_H_ */

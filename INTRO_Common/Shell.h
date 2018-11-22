@@ -32,6 +32,7 @@ void SHELL_ParseCmd(uint8_t *cmd);
  */
 void SHELL_SendString(unsigned char *msg);
 
+
 /*! \brief Shell Module initialization, creates Shell task */
 void SHELL_Init(void);
 

@@ -36,6 +36,9 @@
 #if PL_CONFIG_HAS_SHELL_QUEUE
   #include "ShellQueue.h"
 #endif
+#if PL_LOCAL_CONFIG_HAS_ZORK_GAME
+  #include "Zork.h"
+#endif
 #if PL_CONFIG_HAS_SEMAPHORE
   #include "Sem.h"
 #endif

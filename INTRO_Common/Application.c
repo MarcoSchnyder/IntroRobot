@@ -283,6 +283,7 @@ static void BlinkLED(void *p) {
 	TRG_SetTrigger(TRG_BLINK, 1000/TRG_TICKS_MS, BlinkLED, NULL);
 }
 
+
 static void AppTask(void *pv) {
 	TickType_t last =xTaskGetTickCount();
 #if PL_CONFIG_HAS_BUZZER
@@ -307,6 +308,8 @@ void APP_Start(void) {
   if (xTaskCreate(AppTask, "App", 500/sizeof(StackType_t), NULL, tskIDLE_PRIORITY+2, NULL) != pdPASS) {
     for(;;){} /* error case only, stay here! */
   }
+
+
   vTaskStartScheduler();
   for(;;) {}
 #if 0

@@ -11,6 +11,7 @@
 #include "Shell.h"
 #include "CLS1.h"
 #include "Application.h"
+
 #if PL_CONFIG_HAS_RTOS
   #include "FRTOS1.h"
 #endif
@@ -29,6 +30,10 @@
 #if PL_CONFIG_HAS_SEGGER_RTT
   #include "RTT1.h"
 #endif
+#if PL_LOCAL_CONFIG_HAS_ZORK_GAME
+ #include "Zork.h"
+#endif
+
 #if PL_CONFIG_HAS_MOTOR
   #include "Motor.h"
 #endif
@@ -230,6 +235,9 @@ static const CLS1_ParseCommandCallback CmdParserTable[] =
 #if PL_CONFIG_HAS_BUZZER
   BUZ_ParseCommand,
 #endif
+#if PL_LOCAL_CONFIG_HAS_ZORK_GAME
+  ZORK_ParseCommand,
+#endif
 #if PL_CONFIG_HAS_REFLECTANCE
   #if REF_PARSE_COMMAND_ENABLED
   REF_ParseCommand,
@@ -318,11 +326,7 @@ static uint8_t SHELL_PrintHelp(const CLS1_StdIOType *io) {
   return ERR_OK;
 }
 
-/*!
- * \brief Prints the status text to the console
- * \param io StdIO handler
- * \return ERR_OK or failure code
- */
+
 static uint8_t SHELL_PrintStatus(const CLS1_StdIOType *io) {
   uint8_t buf[16];
 
@@ -332,6 +336,12 @@ static uint8_t SHELL_PrintStatus(const CLS1_StdIOType *io) {
   CLS1_SendStatusStr("  val", buf, io->stdOut);
   return ERR_OK;
 }
+/*!
+ * \brief Prints the status text to the console
+ * \param io StdIO handler
+ * \return ERR_OK or failure code
+ */
+
 
 static uint8_t SHELL_ParseCommand(const unsigned char *cmd, bool *handled, const CLS1_StdIOType *io) {
   uint32_t val;
@@ -354,6 +364,7 @@ static uint8_t SHELL_ParseCommand(const unsigned char *cmd, bool *handled, const
   }
   return ERR_OK;
 }
+
 
 void SHELL_ParseCmd(uint8_t *cmd) {
   (void)CLS1_ParseWithCommandTable(cmd, ios[0].stdio, CmdParserTable);
@@ -392,13 +403,7 @@ static void ShellTask(void *pvParameters) {
     		CLS1_SendStr(msg,CLS1_GetStdio()->stdOut);
     		FRTOS1_vPortFree(msg);
 
-
-
     	}
-
-
-
-
    }
 #endif /* PL_CONFIG_HAS_SHELL_QUEUE */
     vTaskDelay(pdMS_TO_TICKS(10));
