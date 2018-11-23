@@ -14,6 +14,7 @@
 #include "CLS1.h"
 #include "Application.h"
 #include "funcs.h"
+#include "zork_config.h"
 
 #if PL_CONFIG_HAS_RTOS
  #include "FRTOS1.h"
@@ -32,9 +33,9 @@
  */
 uint8_t ZORK_ParseCommand(const unsigned char *cmd, bool *handled, const CLS1_StdIOType *io);
 
-
+TaskHandle_t  zorkHandle;
 uint8_t zork_init();
-uint8_t zork_exit();
+void zork_exit();
 
 
 #endif

@@ -144,13 +144,14 @@ static void REF_MeasureRaw(SensorTimeType raw[REF_NOF_SENSORS]) {
 
   LED_IR_On(); /* IR LED's on */
   WAIT1_Waitus(200);
-  taskENTER_CRITICAL();
+
   for(i=0;i<REF_NOF_SENSORS;i++) {
     SensorFctArray[i].SetOutput(); /* turn I/O line as output */
     SensorFctArray[i].SetVal(); /* put high */
     raw[i] = MAX_SENSOR_VALUE;
   }
-  WAIT1_Waitus(50); /* give at least 10 us to charge the capacitor */
+  WAIT1_Waitus(50);/* give at least 10 us to charge the capacitor */
+  taskENTER_CRITICAL();
   for(i=0;i<REF_NOF_SENSORS;i++) {
     SensorFctArray[i].SetInput(); /* turn I/O line as input */
   }
@@ -516,8 +517,10 @@ static void REF_StateMachine(void) {
     case REF_STATE_NOT_CALIBRATED:
       REF_MeasureRaw(SensorRaw);
       /*! \todo You might add a new event to your event module...*/
-#if REF_START_STOP_CALIB
-      if (xSemaphoreTake(REF_StartStopSem, 0)==pdTRUE) {
+
+
+ #if REF_START_STOP_CALIB
+      if (xSemaphoreTake(REF_StartStopSem, 0)==pdTRUE) {// wait until next calibration
         refState = REF_STATE_START_CALIBRATION;
       }
 #endif

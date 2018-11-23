@@ -9,16 +9,15 @@
 TaskHandle_t  zorkHandle;
 
 
-uint8_t zork_exit(void){
-vTaskDelete(zorkHandle);
-
-
+void zork_exit(){
+	vTaskDelete(zorkHandle);
 }
 
 
 
-static void Zork_Task(void *pv){
-	 zork_config();
+void Zork_Task(void *pv){
+
+	zork_config();
 	 run_zork_game();
 	 for(;;);
 
@@ -27,7 +26,7 @@ static void Zork_Task(void *pv){
 
 uint8_t zork_init() {
 
-	if (xTaskCreate(Zork_Task, "Zork", 500/sizeof(StackType_t),NULL, tskIDLE_PRIORITY+2, zorkHandle)!=pdPASS) {
+	if (xTaskCreate(Zork_Task, "Zork", 900/sizeof(StackType_t),NULL, tskIDLE_PRIORITY+2, zorkHandle)!=pdPASS) {
 	      for(;;){} /* error case only, stay here! */
 	    }
 }

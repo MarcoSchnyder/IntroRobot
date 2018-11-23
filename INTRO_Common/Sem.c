@@ -23,7 +23,10 @@
 static xSemaphoreHandle sem = NULL;
 
 static void vSlaveTask(void *pvParameters) {
-  /*! \todo Implement functionality */
+	/*! \todo Implement functionality */
+
+
+
 }
 
 static void vMasterTask(void *pvParameters) {
