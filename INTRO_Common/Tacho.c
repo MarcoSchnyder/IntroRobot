@@ -18,7 +18,7 @@
 #include "FRTOS1.h"
 #include "Timer.h"
 
-#define TACHO_SAMPLE_PERIOD_MS (100)
+#define TACHO_SAMPLE_PERIOD_MS (1)
   /*!< \todo speed sample period in ms. Make sure that speed is sampled at the given rate. */
 #define NOF_HISTORY (2U+1U)
   /*!< number of samples for speed calculation (>0):the more, the better, but the slower. */
@@ -88,8 +88,8 @@ void TACHO_CalcSpeed(void) {
   if (negRight) {
     speedRight = -speedRight;
   }
-  TACHO_currLeftSpeed = -speedLeft; /* store current speed in global variable */
-  TACHO_currRightSpeed = -speedRight; /* store current speed in global variable */
+  TACHO_currLeftSpeed = speedLeft; /* store current speed in global variable */
+  TACHO_currRightSpeed = speedRight; /* store current speed in global variable */
 }
 
 void TACHO_Sample(void) {

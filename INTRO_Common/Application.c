@@ -37,6 +37,10 @@
 #if PL_CONFIG_HAS_MOTOR
   #include "Motor.h"
 #endif
+#if PL_CONFIG_HAS_MOTOR_TACHO
+  #include "Tacho.h"
+
+#endif
 #if PL_CONFIG_BOARD_IS_ROBO_V2
   #include "PORT_PDD.h"
 #endif
@@ -295,9 +299,11 @@ static void AppTask(void *pv) {
 	  KEYDBNC_Process();
 	  EVNT_HandleEvent(APP_EventHandler, TRUE);
       LED1_Neg();
-	  vTaskDelayUntil(&last, pdMS_TO_TICKS(100));
+      vTaskDelayUntil(&last, pdMS_TO_TICKS(50));
   }
 }
+
+
 
 void APP_Start(void) {
   PL_Init();

@@ -163,10 +163,12 @@ static void REF_MeasureRaw(SensorTimeType raw[REF_NOF_SENSORS]) {
       if (raw[i]==MAX_SENSOR_VALUE) { /* not measured yet? */
         if (SensorFctArray[i].GetVal()==0) {
           raw[i] = (uint16_t)timerVal;
-        if (timerVal> 300000){
-        	break;
         }
-        }
+        if (timerVal> 0xFFF0){
+        	taskEXIT_CRITICAL();
+        	LED_IR_Off(); /* IR LED's off */
+        	return;
+      	}
       } else { /* have value */
         cnt++;
       }
