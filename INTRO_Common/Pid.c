@@ -380,7 +380,7 @@ static uint8_t ParsePidParameter(PID_Config *config, const unsigned char *cmd, b
   }
   return res;
 }
-
+#if PL_CONFIG_HAS_CONFIG_NVM
 static uint8_t PID_LoadSettingsFromFlash(void) {
   PIDConfig_t *ptr;
 
@@ -395,6 +395,7 @@ static uint8_t PID_LoadSettingsFromFlash(void) {
 static uint8_t PID_StoreSettingsToFlash(void) {
   return NVMC_SavePIDData(&config, sizeof(config));
 }
+#endif
 
 uint8_t PID_ParseCommand(const unsigned char *cmd, bool *handled, const CLS1_StdIOType *io) {
   uint8_t res = ERR_OK;
@@ -428,8 +429,8 @@ uint8_t PID_ParseCommand(const unsigned char *cmd, bool *handled, const CLS1_Std
     if (res!=ERR_OK) {
       CLS1_SendStr((unsigned char*)"Loading from FLASH failed!\r\n", io->stdErr);
     }
-  }
 #endif
+  }
   return res;
 }
 #endif /* PL_HAS_SHELL */
@@ -455,11 +456,11 @@ void PID_Deinit(void) {
 
 void PID_Init(void) {
   /*! \todo determine your PID values */
-  config.speedLeftConfig.pFactor100 = 0;
-  config.speedLeftConfig.iFactor100 = 0;
-  config.speedLeftConfig.dFactor100 = 0;
-  config.speedLeftConfig.iAntiWindup = 0;
-  config.speedLeftConfig.maxSpeedPercent = 0;
+  config.speedLeftConfig.pFactor100 = 2000;
+  config.speedLeftConfig.iFactor100 = 80;
+  config.speedLeftConfig.dFactor100 = 10;
+  config.speedLeftConfig.iAntiWindup = 0xffff;
+  config.speedLeftConfig.maxSpeedPercent = 100;
   config.speedLeftConfig.lastError = 0;
   config.speedLeftConfig.integral = 0;
 
@@ -470,19 +471,19 @@ void PID_Init(void) {
   config.speedRightConfig.lastError = 0;
   config.speedRightConfig.integral = 0;
 
-  config.lineFwConfig.pFactor100 = 0;
-  config.lineFwConfig.iFactor100 = 0;
-  config.lineFwConfig.dFactor100 = 0;
-  config.lineFwConfig.iAntiWindup = 0;
-  config.lineFwConfig.maxSpeedPercent = 0;
+  config.lineFwConfig.pFactor100 = 1200;
+  config.lineFwConfig.iFactor100 = 20;
+  config.lineFwConfig.dFactor100 = 5;
+  config.lineFwConfig.iAntiWindup = 0xffff;
+  config.lineFwConfig.maxSpeedPercent = 50;
   config.lineFwConfig.lastError = 0;
   config.lineFwConfig.integral = 0;
 
-  config.posLeftConfig.pFactor100 = 0;
-  config.posLeftConfig.iFactor100 = 0;
-  config.posLeftConfig.dFactor100 = 0;
-  config.posLeftConfig.iAntiWindup = 0;
-  config.posLeftConfig.maxSpeedPercent = 0;
+  config.posLeftConfig.pFactor100 = 2000;
+  config.posLeftConfig.iFactor100 = 100;
+  config.posLeftConfig.dFactor100 = 5;
+  config.posLeftConfig.iAntiWindup = 0xffff;
+  config.posLeftConfig.maxSpeedPercent = 100;
   config.posLeftConfig.lastError = 0;
   config.posLeftConfig.integral = 0;
   config.posRightConfig.pFactor100 = config.posLeftConfig.pFactor100;

@@ -103,7 +103,14 @@ void APP_EventHandler(EVNT_Handle event) {
     break;
 #if PL_CONFIG_NOF_KEYS>=1
   case EVNT_SW1_PRESSED:
-     BtnMsg(1, "pressed");
+    // BtnMsg(1, "pressed");
+#if PL_CONFIG_HAS_LINE_FOLLOW
+     if(!LF_IsFollowing()){
+    	 WAIT1_Waitms(500);
+    	 LF_StartStopFollowing();}
+     break;
+#endif
+
      break;
   case EVNT_SW1_RELEASED:
      BtnMsg(1, "released");

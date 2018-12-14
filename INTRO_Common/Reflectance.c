@@ -61,6 +61,8 @@ typedef struct SensorFctType_ {
 
 typedef uint16_t SensorTimeType;
 #define MAX_SENSOR_VALUE  ((SensorTimeType)-1)
+#define REF_TIME 500
+#define REF_TIMEOUT_TICKS (RefCnt_CNT_INP_FREQ_R_0/1000)*REF_TIME/1000
 
 /* calibration min/max values */
 typedef struct SensorCalibT_ {
@@ -144,31 +146,28 @@ static void REF_MeasureRaw(SensorTimeType raw[REF_NOF_SENSORS]) {
 
   LED_IR_On(); /* IR LED's on */
   WAIT1_Waitus(200);
-
+  taskENTER_CRITICAL();
   for(i=0;i<REF_NOF_SENSORS;i++) {
     SensorFctArray[i].SetOutput(); /* turn I/O line as output */
     SensorFctArray[i].SetVal(); /* put high */
     raw[i] = MAX_SENSOR_VALUE;
   }
   WAIT1_Waitus(50); /* give at least 10 us to charge the capacitor */
-  taskENTER_CRITICAL();
   for(i=0;i<REF_NOF_SENSORS;i++) {
     SensorFctArray[i].SetInput(); /* turn I/O line as input */
   }
   (void)RefCnt_ResetCounter(timerHandle); /* reset timer counter */
   do {
     timerVal = RefCnt_GetCounterValue(timerHandle);
+    if(timerVal> 30000) {
+  	  break;
+    }
     cnt = 0;
     for(i=0;i<REF_NOF_SENSORS;i++) {
       if (raw[i]==MAX_SENSOR_VALUE) { /* not measured yet? */
         if (SensorFctArray[i].GetVal()==0) {
           raw[i] = (uint16_t)timerVal;
         }
-        if (timerVal> 0xFFF0){
-        	taskEXIT_CRITICAL();
-        	LED_IR_Off(); /* IR LED's off */
-        	return;
-      	}
       } else { /* have value */
         cnt++;
       }
@@ -272,7 +271,7 @@ uint16_t REF_GetLineValue(void) {
 static REF_LineKind ReadLineKind(SensorTimeType val[REF_NOF_SENSORS]) {
   uint32_t sum, sumLeft, sumRight, outerLeft, outerRight;
   int i;
-  #define REF_MIN_LINE_VAL      0x60   /* minimum value indicating a line */
+  #define REF_MIN_LINE_VAL      0x100   /* minimum value indicating a line */
 
   for(i=0;i<REF_NOF_SENSORS;i++) {
     if (val[i]<REF_MIN_LINE_VAL) { /* smaller value? White seen! */
@@ -313,13 +312,13 @@ static REF_LineKind ReadLineKind(SensorTimeType val[REF_NOF_SENSORS]) {
   #define MIN_LEFT_RIGHT_SUM   ((REF_NOF_SENSORS*1000)/4) /* 1/4 of full sensor values */
 
   if (outerLeft>=REF_MIN_LINE_VAL && outerRight<REF_MIN_LINE_VAL && sumLeft>MIN_LEFT_RIGHT_SUM && sumRight<MIN_LEFT_RIGHT_SUM) {
-#if 1 || PL_APP_LINE_MAZE
+#if 0 || PL_APP_LINE_MAZE
     return REF_LINE_LEFT; /* line going to the left side */
 #else
     return REF_LINE_STRAIGHT;
 #endif
   } else if (outerLeft<REF_MIN_LINE_VAL && outerRight>=REF_MIN_LINE_VAL && sumRight>MIN_LEFT_RIGHT_SUM && sumLeft<MIN_LEFT_RIGHT_SUM) {
-#if 1 || PL_APP_LINE_MAZE
+#if 0 || PL_APP_LINE_MAZE
     return REF_LINE_RIGHT; /* line going to the right side */
 #else
     return REF_LINE_STRAIGHT;
@@ -602,7 +601,7 @@ void REF_Init(void) {
   refState = REF_STATE_INIT;
   timerHandle = RefCnt_Init(NULL);
   /*! \todo You might need to adjust priority or other task settings */
-  if (xTaskCreate(ReflTask, "Refl", 600/sizeof(StackType_t), NULL, tskIDLE_PRIORITY, NULL) != pdPASS) {
+  if (xTaskCreate(ReflTask, "Refl", 600/sizeof(StackType_t), NULL, tskIDLE_PRIORITY+2, NULL) != pdPASS) {
     for(;;){} /* error */
   }
 }

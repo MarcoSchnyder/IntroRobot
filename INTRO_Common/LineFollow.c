@@ -85,7 +85,9 @@ static bool FollowSegment(void) {
 }
 
 static void StateMachine(void) {
-  REF_LineKind lineKind;
+#if PL_CONFIG_HAS_TURN
+	REF_LineKind lineKind;
+#endif
 
   switch (LF_currState) {
     case STATE_IDLE:
@@ -93,36 +95,51 @@ static void StateMachine(void) {
 
     case STATE_FOLLOW_SEGMENT:
       if (!FollowSegment()) {
-        //SHELL_SendString((unsigned char*)"No line, stopped!\r\n");
+        SHELL_SendString((unsigned char*)"No line, stopped!\r\n");
         //LF_currState = STATE_STOP; /* stop if we do not have a line any more */
         LF_currState = STATE_TURN;
       }
       break;
-
+#if PL_CONFIG_HAS_TURN
     case STATE_TURN:
       lineKind = REF_GetLineKind();
       if (lineKind==REF_LINE_FULL) {
         LF_currState = STATE_FINISHED;
-      } if (lineKind==REF_LINE_NONE) {
-        TURN_Turn(TURN_LEFT180, NULL);
-        DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
-        LF_currState = STATE_FOLLOW_SEGMENT;
+    } if (lineKind==REF_LINE_NONE) {
+       TURN_Turn(TURN_LEFT180, NULL);
+       DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+       LF_currState = STATE_FOLLOW_SEGMENT;
+      // Marco Code
+      } if (lineKind==REF_LINE_LEFT) {
+             TURN_Turn(TURN_LEFT45, NULL);
+             DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+             LF_currState = STATE_FOLLOW_SEGMENT;
+
+      } if (lineKind==REF_LINE_RIGHT) {
+             TURN_Turn(TURN_RIGHT45, NULL);
+             DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+              LF_currState = STATE_FOLLOW_SEGMENT;
+
       } else {
         LF_currState = STATE_STOP;
       }
       break;
-
+#endif
     case STATE_FINISHED:
       SHELL_SendString("Finished!\r\n");
       LF_currState = STATE_STOP;
       break;
 
     case STATE_STOP:
-#if 1
+#if 0
       RNETA_SendSignal('C'); /*! \todo */
 #endif
       SHELL_SendString("Stopped!\r\n");
+#if PL_CONFIG_HAS_TURN
       TURN_Turn(TURN_STOP, NULL);
+#else
+      DRV_SetMode(DRV_MODE_STOP);
+#endif
       LF_currState = STATE_IDLE;
       break;
   } /* switch */
@@ -139,7 +156,7 @@ static void LineTask (void *pvParameters) {
   for(;;) {
     (void)xTaskNotifyWait(0UL, LF_START_FOLLOWING|LF_STOP_FOLLOWING, &notifcationValue, 0); /* check flags */
     if (notifcationValue&LF_START_FOLLOWING) {
-#if 1
+#if 0
       RNETA_SendSignal('B'); /*! \todo */
 #endif
       DRV_SetMode(DRV_MODE_NONE); /* disable any drive mode */
