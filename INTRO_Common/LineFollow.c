@@ -14,6 +14,7 @@
 #include "Shell.h"
 #include "Motor.h"
 #include "Reflectance.h"
+#include "Event.h"
 #if PL_CONFIG_HAS_TURN
   #include "Turn.h"
 #endif
@@ -40,6 +41,12 @@ typedef enum {
   STATE_STOP,               /* stop the engines */
   STATE_START
 } StateType;
+
+typedef enum{
+	LEFT,
+	RIGHT,
+	NONE
+} LR_state_t;
 
 /* task notification bits */
 #define LF_START_FOLLOWING (1<<0)  /* start line following */
@@ -75,6 +82,7 @@ static bool FollowSegment(void) {
   uint16_t currLine;
   REF_LineKind currLineKind;
 
+
   currLine = REF_GetLineValue();
   currLineKind = REF_GetLineKind();
   if (currLineKind==REF_LINE_STRAIGHT) {
@@ -88,8 +96,8 @@ static bool FollowSegment(void) {
 static void StateMachine(void) {
 	static int inturn = 0;
 	static int counter = 0;
+	static int counter2 = 0;
   REF_LineKind lineKind;
-  //REF_TEST test = REF_LINE_RIGHT1;
   switch (LF_currState) {
     case STATE_IDLE:
       break;
@@ -103,17 +111,15 @@ static void StateMachine(void) {
       }
       break;
 #if PL_CONFIG_HAS_TURN
-
-
-      SHELL_SendString((unsigned char*)LF_currState);
     case STATE_TURN:
       lineKind = REF_GetLineKind();
       if (lineKind==REF_LINE_FULL) {
         LF_currState = STATE_FINISHED;
-      } if ((lineKind==REF_LINE_NONE && counter == 0) || (lineKind==REF_LINE_LEFT && counter == 0)) {
+      } if ((lineKind==REF_LINE_NONE && counter == 0) ) {
     	  inturn =1;
-        TURN_Turn(TURN_LEFT90, NULL);
+        TURN_Turn(TURN_LEFT45, NULL);
         DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+
         if(lineKind ==REF_LINE_STRAIGHT){
         	counter =1;
             LF_currState = STATE_FOLLOW_SEGMENT;
@@ -123,36 +129,35 @@ static void StateMachine(void) {
         }
         LF_currState = STATE_FOLLOW_SEGMENT;
 
-      }if ((lineKind==REF_LINE_NONE && counter == 1) || (lineKind==REF_LINE_RIGHT && counter == 1)) {
+      }if ((lineKind==REF_LINE_NONE && counter == 1) ) {
     	  inturn =1;
-          TURN_Turn(TURN_RIGHT90, NULL);
+          TURN_Turn(TURN_RIGHT45, NULL);
           DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+
           if(lineKind ==REF_LINE_STRAIGHT){
           counter =0;
           LF_currState = STATE_FOLLOW_SEGMENT;
           }
           LF_currState = STATE_TURN;
         }
-/*      if (lineKind==REF_LINE_LEFT && inturn ==1) {
-             TURN_Turn(TURN_LEFT90, NULL);
-             DRV_SetMode(DRV_MODE_NONE);  disable position mode
-             if(lineKind ==REF_LINE_STRAIGHT){
-             	counter =1;
-                 LF_currState = STATE_FOLLOW_SEGMENT;
-             }
-             else {
-             	 LF_currState = STATE_TURN;
-             }
-             LF_currState = STATE_FOLLOW_SEGMENT;
-           }if (lineKind==REF_LINE_RIGHT && inturn ==1) {
-               TURN_Turn(TURN_RIGHT90, NULL);
-               DRV_SetMode(DRV_MODE_NONE);  disable position mode
-               if(lineKind ==REF_LINE_STRAIGHT){
-               counter =0;
-               LF_currState = STATE_FOLLOW_SEGMENT;
-               }
-               LF_currState = STATE_TURN;
-             }*/
+
+
+      if (lineKind==REF_LINE_LEFT){
+    	  counter = 0;
+
+
+
+      }
+
+      if (lineKind==REF_LINE_RIGHT){
+
+    	  counter = 1;
+
+
+      }
+
+
+
       else {
         LF_currState = STATE_FOLLOW_SEGMENT;
         inturn =0;
@@ -162,7 +167,7 @@ static void StateMachine(void) {
     case STATE_FINISHED:
       SHELL_SendString("Finished!\r\n");
       LF_currState = STATE_STOP;
-      BUZ_Beep(300, 1000);
+      EVNT_SetEvent(FINISHED);
 
       break;
 

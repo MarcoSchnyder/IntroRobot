@@ -127,10 +127,10 @@ static void StepsTurn(int32_t stepsL, int32_t stepsR, TURN_StopFct stopIt, int32
 void TURN_Turn(TURN_Kind kind, TURN_StopFct stopIt) {
   switch(kind) {
     case TURN_LEFT45:
-      StepsTurn(-TURN_Steps90/2, TURN_Steps90/2, stopIt, TURN_STEPS_90_TIMEOUT_MS/2);
+      StepsTurn(-TURN_Steps90/6, TURN_Steps90/6, stopIt, TURN_STEPS_90_TIMEOUT_MS/6);
       break;
     case TURN_RIGHT45:
-      StepsTurn(TURN_Steps90/2, -TURN_Steps90/2, stopIt, TURN_STEPS_90_TIMEOUT_MS/2);
+      StepsTurn(TURN_Steps90/6, -TURN_Steps90/6, stopIt, TURN_STEPS_90_TIMEOUT_MS/6);
       break;
     case TURN_LEFT90:
       StepsTurn(-TURN_Steps90, TURN_Steps90, stopIt, TURN_STEPS_90_TIMEOUT_MS);

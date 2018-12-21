@@ -15,344 +15,307 @@
 #include "KeyDebounce.h"
 #include "CLS1.h"
 #include "KIN1.h"
+#include "RApp.h"
+#include "RStdIO.h"
 #if PL_CONFIG_HAS_KEYS
-  #include "Keys.h"
+#include "Keys.h"
 #endif
 #if PL_CONFIG_HAS_SHELL
-  #include "CLS1.h"
-  #include "Shell.h"
-  #include "RTT1.h"
+#include "CLS1.h"
+#include "Shell.h"
+#include "RTT1.h"
 #endif
 #if PL_CONFIG_HAS_BUZZER
-  #include "Buzzer.h"
+#include "Buzzer.h"
 #endif
 #if PL_CONFIG_HAS_RTOS
-  #include "FRTOS1.h"
-  #include "RTOS.h"
+#include "FRTOS1.h"
+#include "RTOS.h"
+#endif
+#if PL_HAS_ZORK
+#include"Zork/zork_config.h"
+#include"Zork/dmain.h"
 #endif
 #if PL_CONFIG_HAS_QUADRATURE
-  #include "Q4CLeft.h"
-  #include "Q4CRight.h"
+#include "Q4CLeft.h"
+#include "Q4CRight.h"
 #endif
 #if PL_CONFIG_HAS_MOTOR
-  #include "Motor.h"
-#endif
-#if PL_CONFIG_HAS_MOTOR_TACHO
-  #include "Tacho.h"
-
+#include "Motor.h"
 #endif
 #if PL_CONFIG_BOARD_IS_ROBO_V2
-  #include "PORT_PDD.h"
+#include "PORT_PDD.h"
 #endif
 #if PL_CONFIG_HAS_LINE_FOLLOW
-  #include "LineFollow.h"
+#include "LineFollow.h"
 #endif
 #if PL_CONFIG_HAS_LCD_MENU
-  #include "LCD.h"
+#include "LCD.h"
 #endif
 #if PL_CONFIG_HAS_SNAKE_GAME
-  #include "Snake.h"
+#include "Snake.h"
 #endif
 #if PL_CONFIG_HAS_REFLECTANCE
-  #include "Reflectance.h"
+#include "Reflectance.h"
 #endif
 #include "Sumo.h"
-#include "Buzzer.h"
-#include "Trigger.h"
-#include "FRTOS1.h"
 
 #if PL_CONFIG_HAS_EVENTS
 
 static void BtnMsg(int btn, const char *msg) {
 #if PL_CONFIG_HAS_SHELL
-  #if PL_CONFIG_HAS_SHELL_QUEUE
-    uint8_t buf[48];
+#if PL_CONFIG_HAS_SHELL_QUEUE
+	uint8_t buf[48];
 
-    UTIL1_strcpy(buf, sizeof(buf), "Button pressed: ");
-    UTIL1_strcat(buf, sizeof(buf), msg);
-    UTIL1_strcat(buf, sizeof(buf), ": ");
-    UTIL1_strcatNum32s(buf, sizeof(buf), btn);
-    UTIL1_strcat(buf, sizeof(buf), "\r\n");
-    SHELL_SendString(buf);
-  #else
-    CLS1_SendStr("Button pressed: ", CLS1_GetStdio()->stdOut);
-    CLS1_SendStr(msg, CLS1_GetStdio()->stdOut);
-    CLS1_SendStr(": ", CLS1_GetStdio()->stdOut);
-    CLS1_SendNum32s(btn, CLS1_GetStdio()->stdOut);
-    CLS1_SendStr("\r\n", CLS1_GetStdio()->stdOut);
-  #endif
+	UTIL1_strcpy(buf, sizeof(buf), "Button pressed: ");
+	UTIL1_strcat(buf, sizeof(buf), msg);
+	UTIL1_strcat(buf, sizeof(buf), ": ");
+	UTIL1_strcatNum32s(buf, sizeof(buf), btn);
+	UTIL1_strcat(buf, sizeof(buf), "\r\n");
+	SHELL_SendString(buf);
+#else
+	CLS1_SendStr("Button pressed: ", CLS1_GetStdio()->stdOut);
+	CLS1_SendStr(msg, CLS1_GetStdio()->stdOut);
+	CLS1_SendStr(": ", CLS1_GetStdio()->stdOut);
+	CLS1_SendNum32s(btn, CLS1_GetStdio()->stdOut);
+	CLS1_SendStr("\r\n", CLS1_GetStdio()->stdOut);
+#endif
 #endif
 }
 
 void APP_EventHandler(EVNT_Handle event) {
-  /*! \todo handle events */
-  switch(event) {
-  case EVNT_STARTUP:
-    {
-      int i;
-      CLS1_SendStr("Let the show begin...\n", CLS1_GetStdio()->stdOut);
-      for (i=0;i<5;i++) {
-        LED1_Neg();
-        WAIT1_Waitms(50);
-      }
-      LED1_Off();
-    }
-    break;
-  case EVNT_LED_HEARTBEAT:
-    LED2_Neg();
-    break;
+	/*! \todo handle events */
+	switch (event) {
+	case EVNT_STARTUP: {
+		CLS1_SendStr("Hallo Konsole\n",CLS1_GetStdio()->stdOut);
+		int i;
+		for (i = 0; i < 5; i++) {
+			LED1_Neg();
+			WAIT1_Waitms(50);
+		}
+		LED1_Off();
+#if PL_CONFIG_HAS_BUZZER
+		BUZ_PlayTune(BUZ_TUNE_BUTTON_LONG);
+#endif
+	}
+		break;
+	case EVNT_LED_HEARTBEAT:
+		LED2_Neg();
+		LED1_Neg();
+		break;
+//	case EVNT_LED1_BLINK:
+		LED1_Neg();
+		break;
 #if PL_CONFIG_NOF_KEYS>=1
-  case EVNT_SW1_PRESSED:
-    // BtnMsg(1, "pressed");
-#if PL_CONFIG_HAS_LINE_FOLLOW
-     if(!LF_IsFollowing()){
-    	 WAIT1_Waitms(500);
-    	 LF_StartStopFollowing();}
-     break;
-#endif
+	case EVNT_SW1_PRESSED:
+		BtnMsg(1, "pressed");
+		break;
 
-     break;
-  case EVNT_SW1_RELEASED:
-     BtnMsg(1, "released");
-     break;
-  case EVNT_SW1_LPRESSED:
-     BtnMsg(1, "long pressed");
-     break;
-  case EVNT_SW1_LRELEASED:
-     BtnMsg(1, "long released");
-     break;
+	case EVNT_SW1_LPRESSED:
+		BtnMsg(1, "long pressed");
+#if PL_CONFIG_HAS_REFLECTANCE
+		REF_CalibrateStartStop();
 #endif
+		break;
+
+#if PL_CONFIG_HAS_BUZZER
+		BUZ_PlayTune(BUZ_TUNE_BUTTON_LONG);
+#endif
+		break;
+#endif
+	case FINISHED:
+		//BUZ_PlayTune(BUZ_TUNE_WELCOME);
+		BUZ_PlayTune(BUZ_TUNE_BUTTON_LONG);
+		break;
 #if PL_CONFIG_NOF_KEYS>=2
-  case EVNT_SW2_PRESSED:
-     BtnMsg(2, "pressed");
-     break;
-  case EVNT_SW2_RELEASED:
-     BtnMsg(2, "released");
-     break;
-  case EVNT_SW2_LPRESSED:
-     BtnMsg(2, "long pressed");
-     break;
-  case EVNT_SW2_LRELEASED:
-     BtnMsg(2, "long released");
-     break;
+	case EVNT_SW2_PRESSED:
+		BtnMsg(2, "pressed");
+		break;
 #endif
 #if PL_CONFIG_NOF_KEYS>=3
-  case EVNT_SW3_PRESSED:
-     BtnMsg(3, "pressed");
-     break;
-  case EVNT_SW3_RELEASED:
-     BtnMsg(3, "released");
-     break;
-  case EVNT_SW3_LPRESSED:
-     BtnMsg(3, "long pressed");
-     break;
-  case EVNT_SW3_LRELEASED:
-     BtnMsg(3, "long released");
-     break;
+	case EVNT_SW3_PRESSED:
+		BtnMsg(3, "pressed");
+		break;
 #endif
 #if PL_CONFIG_NOF_KEYS>=4
-  case EVNT_SW4_PRESSED:
-     BtnMsg(4, "pressed");
-     break;
-  case EVNT_SW4_RELEASED:
-     BtnMsg(4, "released");
-     break;
-  case EVNT_SW4_LPRESSED:
-     BtnMsg(4, "long pressed");
-     break;
-  case EVNT_SW4_LRELEASED:
-     BtnMsg(4, "long released");
-     break;
+	case EVNT_SW4_PRESSED:
+		BtnMsg(4, "pressed");
+		(void)RSTDIO_SendToTxStdio(RSTDIO_QUEUE_TX_IN,
+		"line start\r\n",
+		sizeof("line start\r\n")-1);
+		break;
 #endif
 #if PL_CONFIG_NOF_KEYS>=5
-  case EVNT_SW5_PRESSED:
-     BtnMsg(5, "pressed");
-     break;
-  case EVNT_SW5_RELEASED:
-     BtnMsg(5, "released");
-     break;
-  case EVNT_SW5_LPRESSED:
-     BtnMsg(5, "long pressed");
-     break;
-  case EVNT_SW5_LRELEASED:
-     BtnMsg(5, "long released");
-     break;
+	case EVNT_SW5_PRESSED:
+		BtnMsg(5, "pressed");
+		(void)RSTDIO_SendToTxStdio(RSTDIO_QUEUE_TX_IN,
+		"line stop\r\n",
+		sizeof("line start\r\n")-1);
+		break;
+	case EVNT_SW5_LPRESSED:
+		BtnMsg(5, "long pressed");
+		break;
+	case EVNT_SW5_RELEASED:
+		BtnMsg(5, "released");
+		break;
 #endif
 #if PL_CONFIG_NOF_KEYS>=6
-  case EVNT_SW6_PRESSED:
-     BtnMsg(6, "pressed");
-     break;
-  case EVNT_SW6_RELEASED:
-     BtnMsg(6, "released");
-     break;
-  case EVNT_SW6_LPRESSED:
-     BtnMsg(6, "long pressed");
-     break;
-  case EVNT_SW6_LRELEASED:
-     BtnMsg(6, "long released");
-     break;
+	case EVNT_SW6_PRESSED:
+		BtnMsg(6, "pressed");
+		break;
+	case EVNT_SW6_LPRESSED:
+		BtnMsg(6, "long pressed");
+		break;
+	case EVNT_SW6_RELEASED:
+		BtnMsg(6, "released");
+		break;
 #endif
 #if PL_CONFIG_NOF_KEYS>=7
-  case EVNT_SW7_PRESSED:
-     BtnMsg(7, "pressed");
-     break;
-  case EVNT_SW7_RELEASED:
-     BtnMsg(7, "released");
-     break;
-  case EVNT_SW7_LPRESSED:
-     BtnMsg(7, "long pressed");
-     break;
-  case EVNT_SW7_LRELEASED:
-     BtnMsg(7, "long released");
-     break;
+	case EVNT_SW7_PRESSED:
+		BtnMsg(7, "pressed");
+		break;
+	case EVNT_SW7_LPRESSED:
+		BtnMsg(7, "long pressed");
+		break;
+	case EVNT_SW7_RELEASED:
+		BtnMsg(7, "released");
+		break;
 #endif
-
-  default:
-      break;
-   } /* switch */
+	default:
+		break;
+	} /* switch */
 }
 #endif /* PL_CONFIG_HAS_EVENTS */
 
 #if PL_CONFIG_HAS_MOTOR /* currently only used for robots */
 static const KIN1_UID RoboIDs[] = {
-  /* 0: L20, V2 */ {{0x00,0x03,0x00,0x00,0x67,0xCD,0xB7,0x21,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
-  /* 1: L21, V2 */ {{0x00,0x05,0x00,0x00,0x4E,0x45,0xB7,0x21,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
-  /* 2: L4, V1  */ {{0x00,0x0B,0xFF,0xFF,0x4E,0x45,0xFF,0xFF,0x4E,0x45,0x27,0x99,0x10,0x02,0x00,0x24}},
-  /* 3: L23, V2 */ {{0x00,0x0A,0x00,0x00,0x67,0xCD,0xB8,0x21,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
-  /* 4: L11, V2 */ {{0x00,0x19,0x00,0x00,0x67,0xCD,0xB9,0x11,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
-  /* 5: L5, V2 */  {{0x00,0x38,0x00,0x00,0x67,0xCD,0xB5,0x41,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
-  /* 6: L3, V1 */  {{0x00,0x33,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x4E,0x45,0x27,0x99,0x10,0x02,0x00,0x0A}},
-  /* 7: L1, V1 */  {{0x00,0x19,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x4E,0x45,0x27,0x99,0x10,0x02,0x00,0x25}},
+	/* 0: L20, V2 */{ {0x00,0x03,0x00,0x00,0x67,0xCD,0xB7,0x21,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
+	/* 1: L21, V2 */{ {0x00,0x05,0x00,0x00,0x4E,0x45,0xB7,0x21,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
+	/* 2: L4, V1  */{ {0x00,0x0B,0xFF,0xFF,0x4E,0x45,0xFF,0xFF,0x4E,0x45,0x27,0x99,0x10,0x02,0x00,0x24}},
+	/* 3: L23, V2 */{ {0x00,0x0A,0x00,0x00,0x67,0xCD,0xB8,0x21,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
+	/* 4: L11, V2 */{ {0x00,0x19,0x00,0x00,0x67,0xCD,0xB9,0x11,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
+	/* 5: L5, V2 */{ {0x00,0x38,0x00,0x00,0x67,0xCD,0xB5,0x41,0x4E,0x45,0x32,0x15,0x30,0x02,0x00,0x13}},
+	/* 6: L3, V1 */{ {0x00,0x33,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x4E,0x45,0x27,0x99,0x10,0x02,0x00,0x0A}},
+	/* 7: L1, V1 */{ {0x00,0x19,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x4E,0x45,0x27,0x99,0x10,0x02,0x00,0x25}},
 };
 #endif
 
 static void APP_AdoptToHardware(void) {
-  KIN1_UID id;
-  uint8_t res;
+	KIN1_UID id;
+	uint8_t res;
 
-  res = KIN1_UIDGet(&id);
-  if (res!=ERR_OK) {
-    for(;;); /* error */
-  }
+	res = KIN1_UIDGet(&id);
+	if (res != ERR_OK) {
+		for (;;)
+			; /* error */
+	}
 #if PL_CONFIG_HAS_MOTOR
-  if (KIN1_UIDSame(&id, &RoboIDs[0])) { /* L20 */
+	if (KIN1_UIDSame(&id, &RoboIDs[0])) { /* L20 */
 #if PL_CONFIG_HAS_QUADRATURE
-    (void)Q4CRight_SwapPins(TRUE);
+		(void)Q4CRight_SwapPins(TRUE);
 #endif
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert left motor */
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_RIGHT), TRUE); /* invert left motor */
-  } else if (KIN1_UIDSame(&id, &RoboIDs[1])) { /* V2 L21 */
-    /* no change needed */
-  } else if (KIN1_UIDSame(&id, &RoboIDs[2])) { /* V1 L4 */
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* revert left motor */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert left motor */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_RIGHT), TRUE); /* invert left motor */
+	} else if (KIN1_UIDSame(&id, &RoboIDs[1])) { /* V2 L21 */
+		/* no change needed */
+	} else if (KIN1_UIDSame(&id, &RoboIDs[2])) { /* V1 L4 */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* revert left motor */
 #if PL_CONFIG_HAS_QUADRATURE
-    (void)Q4CLeft_SwapPins(TRUE);
-    (void)Q4CRight_SwapPins(TRUE);
+		(void)Q4CLeft_SwapPins(TRUE);
+		(void)Q4CRight_SwapPins(TRUE);
 #endif
-  } else if (KIN1_UIDSame(&id, &RoboIDs[3])) { /* L23 */
+	} else if (KIN1_UIDSame(&id, &RoboIDs[3])) { /* L23 */
 #if PL_CONFIG_HAS_QUADRATURE
-    (void)Q4CRight_SwapPins(TRUE);
+		(void)Q4CRight_SwapPins(TRUE);
 #endif
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert left motor */
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_RIGHT), TRUE); /* invert left motor */
-  } else if (KIN1_UIDSame(&id, &RoboIDs[4])) { /* L11 */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert left motor */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_RIGHT), TRUE); /* invert left motor */
+	} else if (KIN1_UIDSame(&id, &RoboIDs[4])) { /* L11 */
 #if PL_CONFIG_HAS_QUADRATURE
-    (void)Q4CRight_SwapPins(TRUE);
+		(void)Q4CRight_SwapPins(TRUE);
 #endif
-  } else if (KIN1_UIDSame(&id, &RoboIDs[5])) { /* L5, V2 */
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_RIGHT), TRUE); /* invert right motor */
-    (void)Q4CRight_SwapPins(TRUE);
-  } else if (KIN1_UIDSame(&id, &RoboIDs[6])) { /* L3, V1 */
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert right motor */
+	} else if (KIN1_UIDSame(&id, &RoboIDs[5])) { /* L5, V2 */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_RIGHT), TRUE); /* invert right motor */
+		(void)Q4CRight_SwapPins(TRUE);
+	} else if (KIN1_UIDSame(&id, &RoboIDs[6])) { /* L3, V1 */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert right motor */
 #if PL_CONFIG_HAS_QUADRATURE
-    (void)Q4CLeft_SwapPins(TRUE);
-    (void)Q4CRight_SwapPins(TRUE);
+		(void)Q4CLeft_SwapPins(TRUE);
+		(void)Q4CRight_SwapPins(TRUE);
 #endif
-  } else if (KIN1_UIDSame(&id, &RoboIDs[7])) { /* L1, V1 */
-    MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert right motor */
+	} else if (KIN1_UIDSame(&id, &RoboIDs[7])) { /* L1, V1 */
+		MOT_Invert(MOT_GetMotorHandle(MOT_MOTOR_LEFT), TRUE); /* invert right motor */
 #if PL_CONFIG_HAS_QUADRATURE
-    (void)Q4CLeft_SwapPins(TRUE);
-    (void)Q4CRight_SwapPins(TRUE);
+		(void)Q4CLeft_SwapPins(TRUE);
+		(void)Q4CRight_SwapPins(TRUE);
 #endif
-  }
+	}
 #endif
 #if PL_CONFIG_HAS_QUADRATURE && PL_CONFIG_BOARD_IS_ROBO_V2
-  /* pull-ups for Quadrature Encoder Pins */
-  PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 10, PORT_PDD_PULL_UP);
-  PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 10, PORT_PDD_PULL_ENABLE);
-  PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 11, PORT_PDD_PULL_UP);
-  PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 11, PORT_PDD_PULL_ENABLE);
-  PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 16, PORT_PDD_PULL_UP);
-  PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 16, PORT_PDD_PULL_ENABLE);
-  PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 17, PORT_PDD_PULL_UP);
-  PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 17, PORT_PDD_PULL_ENABLE);
+	/* pull-ups for Quadrature Encoder Pins */
+	PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 10, PORT_PDD_PULL_UP);
+	PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 10, PORT_PDD_PULL_ENABLE);
+	PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 11, PORT_PDD_PULL_UP);
+	PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 11, PORT_PDD_PULL_ENABLE);
+	PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 16, PORT_PDD_PULL_UP);
+	PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 16, PORT_PDD_PULL_ENABLE);
+	PORT_PDD_SetPinPullSelect(PORTC_BASE_PTR, 17, PORT_PDD_PULL_UP);
+	PORT_PDD_SetPinPullEnable(PORTC_BASE_PTR, 17, PORT_PDD_PULL_ENABLE);
 #endif
 }
 
-static void BlinkLED(void *p) {
-	LED1_Neg();
-	TRG_SetTrigger(TRG_BLINK, 1000/TRG_TICKS_MS, BlinkLED, NULL);
-}
-
-
-static void AppTask(void *pv) {
-	TickType_t last =xTaskGetTickCount();
-#if PL_CONFIG_HAS_BUZZER
-  BUZ_Beep(300, 1000);
-  //BUZ_PlayTune(BUZ_TUNE_WELCOME);
+#if PL_CONFIG_HAS_RTOS
+static void AppMainTask(void *pvParameters) {
+	TickType_t xLastWaitTime = xTaskGetTickCount();
+	for (;;) {
+#if PL_CONFIG_HAS_DEBOUNCE
+		KEYDBNC_Process();
+#else
+		KEY_Scan();
 #endif
-  TRG_SetTrigger(TRG_BLINK, 0, BlinkLED, NULL);
-  for(;;) {
-	  KEYDBNC_Process();
-	  EVNT_HandleEvent(APP_EventHandler, TRUE);
-      LED1_Neg();
-      vTaskDelayUntil(&last, pdMS_TO_TICKS(50));
-  }
+		EVNT_HandleEvent(*APP_EventHandler, TRUE);
+		vTaskDelayUntil(&xLastWaitTime,pdMS_TO_TICKS(10));
+	}
 }
-
-
+#endif
 
 void APP_Start(void) {
-  PL_Init();
-  APP_AdoptToHardware();
-  //__asm volatile("cpsie i"); /* enable interrupts */
-  EVNT_SetEvent(EVNT_STARTUP);
-
-  if (xTaskCreate(AppTask, "App", 500/sizeof(StackType_t), NULL, tskIDLE_PRIORITY+2, NULL) != pdPASS) {
-    for(;;){} /* error case only, stay here! */
-  }
-
-
-  vTaskStartScheduler();
-  for(;;) {}
-#if 0
+	CS1_CriticalVariable()
+	PL_Init();
+	APP_AdoptToHardware();
+	__asm volatile("cpsie i");
+	/* enable interrupts */
 #if PL_CONFIG_HAS_BUZZER
-  BUZ_Beep(300, 1000);
-  //BUZ_PlayTune(BUZ_TUNE_WELCOME);
+	BUZ_Init();
 #endif
-  TRG_SetTrigger(TRG_BLINK, 0, BlinkLED, NULL);
-  for(;;) {
-	  EVNT_HandleEvent(APP_EventHandler, TRUE);
-#if PL_CONFIG_NOF_LEDS>=1
-//	  LED1_On();
+#if PL_CONFIG_NOF_LEDS >= 1
+	LED1_Off();
 #endif
-#if PL_CONFIG_NOF_LEDS>=2
-//	  LED2_On();
+#if PL_CONFIG_NOF_LEDS >= 2
+	LED2_Off();
 #endif
-#if PL_CONFIG_NOF_LEDS>=3
-//	  LED3_On();
+#if PL_CONFIG_NOF_LEDS >= 3
+	LED3_Off();
+
 #endif
-	  //WAIT1_Waitms(500);
-//	  LED1_Off();
-//	  LED2_Off();
-//	  LED3_Off();
-	  //WAIT1_Waitms(500);
-//	  EVNT_SetEvent(EVNT_LED_HEARTBEAT);
-	  //KEY_Scan();
-	  KEYDBNC_Process();
-	  WAIT1_Waitms(20);
-  }
+	EVNT_SetEvent(EVNT_STARTUP);
+#if PL_CONFIG_HAS_RTOS
+	BaseType_t res;
+	xTaskHandle taskHndl2;
+	res = xTaskCreate(AppMainTask, "AppMain", configMINIMAL_STACK_SIZE + 200,
+			(void*)NULL, tskIDLE_PRIORITY+3, &taskHndl2);
+	if (res != pdPASS) {
+
+	}
+	vTaskStartScheduler() ;
 #endif
+
+	for (;;) {
+		//EVNT_HandleEvent(APP_EventHandler,FALSE);
+	}
+
+
 }
+
 
 
