@@ -117,9 +117,10 @@ static void StateMachine(void) {
         LF_currState = STATE_FINISHED;
       } if ((lineKind==REF_LINE_NONE && counter == 0) ) {
     	  inturn =1;
+
         TURN_Turn(TURN_LEFT45, NULL);
         DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
-
+        lineKind = REF_GetLineKind();
         if(lineKind ==REF_LINE_STRAIGHT){
         	counter =1;
             LF_currState = STATE_FOLLOW_SEGMENT;
@@ -133,7 +134,7 @@ static void StateMachine(void) {
     	  inturn =1;
           TURN_Turn(TURN_RIGHT45, NULL);
           DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
-
+          lineKind = REF_GetLineKind();
           if(lineKind ==REF_LINE_STRAIGHT){
           counter =0;
           LF_currState = STATE_FOLLOW_SEGMENT;
@@ -143,7 +144,7 @@ static void StateMachine(void) {
 
 
       if (lineKind==REF_LINE_LEFT){
-    	  counter = 0;
+    //	  counter = 0;
 
 
 
@@ -151,7 +152,7 @@ static void StateMachine(void) {
 
       if (lineKind==REF_LINE_RIGHT){
 
-    	  counter = 1;
+    	//  counter = 1;
 
 
       }
