@@ -37,7 +37,8 @@ typedef enum {
   STATE_FOLLOW_SEGMENT,    /* line following segment, going forward */
   STATE_TURN,              /* reached an intersection, turning around */
   STATE_FINISHED,          /* reached finish area */
-  STATE_STOP               /* stop the engines */
+  STATE_STOP,               /* stop the engines */
+  STATE_START
 } StateType;
 
 /* task notification bits */
@@ -85,49 +86,84 @@ static bool FollowSegment(void) {
 }
 
 static void StateMachine(void) {
-#if PL_CONFIG_HAS_TURN
-	REF_LineKind lineKind;
-#endif
-
+	static int inturn = 0;
+	static int counter = 0;
+  REF_LineKind lineKind;
+  //REF_TEST test = REF_LINE_RIGHT1;
   switch (LF_currState) {
     case STATE_IDLE:
       break;
 
     case STATE_FOLLOW_SEGMENT:
       if (!FollowSegment()) {
-        SHELL_SendString((unsigned char*)"No line, stopped!\r\n");
+          inturn =0;
+        //SHELL_SendString((unsigned char*)"No line, stopped!\r\n");
         //LF_currState = STATE_STOP; /* stop if we do not have a line any more */
         LF_currState = STATE_TURN;
       }
       break;
 #if PL_CONFIG_HAS_TURN
+
+
+      SHELL_SendString((unsigned char*)LF_currState);
     case STATE_TURN:
       lineKind = REF_GetLineKind();
       if (lineKind==REF_LINE_FULL) {
         LF_currState = STATE_FINISHED;
-    } if (lineKind==REF_LINE_NONE) {
-       TURN_Turn(TURN_LEFT180, NULL);
-       DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
-       LF_currState = STATE_FOLLOW_SEGMENT;
-      // Marco Code
-      } if (lineKind==REF_LINE_LEFT) {
-             TURN_Turn(TURN_LEFT45, NULL);
-             DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+      } if ((lineKind==REF_LINE_NONE && counter == 0) || (lineKind==REF_LINE_LEFT && counter == 0)) {
+    	  inturn =1;
+        TURN_Turn(TURN_LEFT90, NULL);
+        DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+        if(lineKind ==REF_LINE_STRAIGHT){
+        	counter =1;
+            LF_currState = STATE_FOLLOW_SEGMENT;
+        }
+        else {
+        	 LF_currState = STATE_TURN;
+        }
+        LF_currState = STATE_FOLLOW_SEGMENT;
+
+      }if ((lineKind==REF_LINE_NONE && counter == 1) || (lineKind==REF_LINE_RIGHT && counter == 1)) {
+    	  inturn =1;
+          TURN_Turn(TURN_RIGHT90, NULL);
+          DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
+          if(lineKind ==REF_LINE_STRAIGHT){
+          counter =0;
+          LF_currState = STATE_FOLLOW_SEGMENT;
+          }
+          LF_currState = STATE_TURN;
+        }
+/*      if (lineKind==REF_LINE_LEFT && inturn ==1) {
+             TURN_Turn(TURN_LEFT90, NULL);
+             DRV_SetMode(DRV_MODE_NONE);  disable position mode
+             if(lineKind ==REF_LINE_STRAIGHT){
+             	counter =1;
+                 LF_currState = STATE_FOLLOW_SEGMENT;
+             }
+             else {
+             	 LF_currState = STATE_TURN;
+             }
              LF_currState = STATE_FOLLOW_SEGMENT;
-
-      } if (lineKind==REF_LINE_RIGHT) {
-             TURN_Turn(TURN_RIGHT45, NULL);
-             DRV_SetMode(DRV_MODE_NONE); /* disable position mode */
-              LF_currState = STATE_FOLLOW_SEGMENT;
-
-      } else {
-        LF_currState = STATE_STOP;
+           }if (lineKind==REF_LINE_RIGHT && inturn ==1) {
+               TURN_Turn(TURN_RIGHT90, NULL);
+               DRV_SetMode(DRV_MODE_NONE);  disable position mode
+               if(lineKind ==REF_LINE_STRAIGHT){
+               counter =0;
+               LF_currState = STATE_FOLLOW_SEGMENT;
+               }
+               LF_currState = STATE_TURN;
+             }*/
+      else {
+        LF_currState = STATE_FOLLOW_SEGMENT;
+        inturn =0;
       }
       break;
 #endif
     case STATE_FINISHED:
       SHELL_SendString("Finished!\r\n");
       LF_currState = STATE_STOP;
+      BUZ_Beep(300, 1000);
+
       break;
 
     case STATE_STOP:
